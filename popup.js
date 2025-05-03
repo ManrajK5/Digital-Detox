@@ -1,129 +1,92 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("block-form");
-    const websiteInput = document.getElementById("website");
-    const durationInput = document.getElementById("duration");
-    const blockedList = document.getElementById("blocked-list");
-  
-    // Function to remove a rule dynamically
-    function removeRule(site) {
-      chrome.declarativeNetRequest.getDynamicRules((rules) => {
-        const ruleToRemove = rules.find((rule) => {
-          if (rule && rule.condition && rule.condition.urlFilter) {
-            // Match site with the rule's urlFilter
-            const ruleDomain = rule.condition.urlFilter
-              .replace(/\*/g, "") // Remove wildcards
-              .replace(/\/$/, ""); // Remove trailing slash
-            return site.includes(ruleDomain);
-          }
-          return false;
-        });
-  
-        if (ruleToRemove) {
-          chrome.declarativeNetRequest.updateDynamicRules(
-            { addRules: [], removeRuleIds: [ruleToRemove.id] },
-            () => {
-              if (chrome.runtime.lastError) {
-                console.error(
-                  `Error removing rule for site ${site}:`,
-                  chrome.runtime.lastError.message
-                );
-              } else {
-                console.log(`Successfully removed rule for site: ${site}`);
-              }
-            }
-          );
-        } else {
-          console.warn(`No matching rule found for site: ${site}`);
-        }
-      });
-    }
-  
-    // Function to update the blocked list display
-    function updateBlockedList(blockedSites) {
-      blockedList.innerHTML = ""; // Clear current list
-      blockedSites.forEach(({ site }) => {
-        const li = document.createElement("li");
-        li.textContent = site;
-  
-        const removeButton = document.createElement("button");
-        removeButton.textContent = "Remove";
-        removeButton.style.marginLeft = "10px";
-        removeButton.style.backgroundColor = "green";
-        removeButton.style.color = "white";
-        removeButton.style.border = "none";
-        removeButton.style.padding = "5px 10px";
-        removeButton.style.cursor = "pointer";
-  
-        removeButton.addEventListener("click", () => handleRemoveSite(site));
-        li.appendChild(removeButton);
-        blockedList.appendChild(li);
-      });
-    }
-  
-    // Function to handle removing a site
-    function handleRemoveSite(site) {
-      chrome.storage.local.get(["blockedSites"], (result) => {
-        const updatedSites = result.blockedSites.filter((entry) => entry.site !== site);
+  const form = document.getElementById("block-form");
+  const websiteInput = document.getElementById("website");
+  const durationInput = document.getElementById("duration");
+  const blockedList = document.getElementById("blocked-list");
+
+  function updateBlockedList(blockedSites) {
+    blockedList.innerHTML = "";
+    const now = Date.now();
+
+    blockedSites.forEach(({ site, expiresAt }) => {
+      const li = document.createElement("li");
+
+      let minutesLeft = expiresAt ? Math.ceil((expiresAt - now) / 60000) : "∞";
+      if (minutesLeft < 0) minutesLeft = 0;
+
+      li.textContent = `${site} (${minutesLeft} min${minutesLeft !== 1 ? "s" : ""} left)`;
+
+      const removeButton = document.createElement("button");
+      removeButton.textContent = "Remove";
+      removeButton.style.marginLeft = "10px";
+      removeButton.style.backgroundColor = "green";
+      removeButton.style.color = "white";
+      removeButton.style.border = "none";
+      removeButton.style.padding = "5px 10px";
+      removeButton.style.cursor = "pointer";
+
+      removeButton.addEventListener("click", () => handleRemoveSite(site));
+      li.appendChild(removeButton);
+      blockedList.appendChild(li);
+    });
+  }
+
+  function handleRemoveSite(site) {
+    chrome.storage.local.get(["blockedSites"], (result) => {
+      const blockedSites = result.blockedSites || [];
+      const siteEntry = blockedSites.find((entry) => entry.site === site);
+
+      if (siteEntry) {
+        const updatedSites = blockedSites.filter((entry) => entry.site !== site);
         chrome.storage.local.set({ blockedSites: updatedSites }, () => {
           updateBlockedList(updatedSites);
-          removeRule(site); // Remove the dynamic rule
+          removeRuleById(siteEntry.ruleId);
         });
-      });
-    }
-  
-    // Function to handle adding a site
-    function handleAddSite(site, expiresAt) {
-      chrome.storage.local.get(["blockedSites"], (result) => {
-        const blockedSites = result.blockedSites || [];
-        // Prevent duplicate entries
-        if (!blockedSites.some((entry) => entry.site === site)) {
-          blockedSites.push({ site, expiresAt });
-          chrome.storage.local.set({ blockedSites }, () => {
-            updateBlockedList(blockedSites);
-          });
+      }
+    });
+  }
+
+  function removeRuleById(ruleId) {
+    chrome.declarativeNetRequest.updateDynamicRules(
+      { addRules: [], removeRuleIds: [ruleId] },
+      () => {
+        if (chrome.runtime.lastError) {
+          console.error(`Failed to remove ruleId ${ruleId}: ${chrome.runtime.lastError.message}`);
         } else {
-          console.warn(`Site ${site} is already in the blocked list.`);
+          console.log(`Successfully removed ruleId ${ruleId}`);
         }
-      });
-    }
-  
-    // Load initial blocked sites from storage
+      }
+    );
+  }
+
+  function refreshBlockedList() {
     chrome.storage.local.get(["blockedSites"], (result) => {
       updateBlockedList(result.blockedSites || []);
     });
-  
-    // Handle form submission
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const site = websiteInput.value.trim();
-      const duration = parseInt(durationInput.value, 10);
-  
-      if (!site || isNaN(duration) || duration <= 0) {
-        alert("Please enter a valid website and duration.");
-        return;
+  }
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const site = websiteInput.value.trim();
+    const duration = parseInt(durationInput.value, 10);
+
+    if (!site || isNaN(duration) || duration <= 0) {
+      alert("Please enter a valid website and duration.");
+      return;
+    }
+
+    const expiresAt = Date.now() + duration * 60000;
+
+    chrome.runtime.sendMessage({ action: "addBlock", site, expiresAt }, (response) => {
+      if (response.success) {
+        setTimeout(refreshBlockedList, 500);
+        websiteInput.value = "";
+        durationInput.value = "";
+      } else {
+        alert("Failed to add the block rule.");
       }
-  
-      // Calculate expiration time
-      const expiresAt = Date.now() + duration * 60000;
-  
-      // Add the block rule
-      chrome.runtime.sendMessage({ action: "addBlock", site, expiresAt }, (response) => {
-        if (response.success) {
-          handleAddSite(site, expiresAt);
-          websiteInput.value = ""; // Clear input fields
-          durationInput.value = "";
-        } else {
-          alert("Failed to add the block rule.");
-        }
-      });
     });
   });
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+  refreshBlockedList();
+});
