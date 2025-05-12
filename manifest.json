@@ -1,9 +1,15 @@
 {
   "manifest_version": 3,
   "name": "Digital Detox",
-  "version": "1.0",
-  "description": "A Chrome extension to block websites and promote healthier online habits.",
-  "permissions": ["storage", "declarativeNetRequest", "scripting"],
+  "version": "1.1",
+  "description": "A Chrome extension to block websites and track screen time.",
+  "permissions": [
+    "storage", 
+    "tabs",
+    "activeTab",
+    "declarativeNetRequest", 
+    "scripting"
+  ],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"

@@ -1,55 +1,133 @@
+/* popup.css */
+
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #1e1e2f;
   margin: 0;
   padding: 0;
-  text-align: center;
+  width: 320px;
+  color: #f1f1f1;
 }
 
-#app {
-  width: 200px;
-  padding: 20px;
-  margin: 0 auto;
+.container {
+  padding: 16px;
+  background-color: #2a2a3d;
 }
 
+/* Header */
 h1 {
-  font-size: 24px;
+  font-size: 20px;
+  margin-bottom: 16px;
+  color: #6ca0ff;
 }
 
+/* Form */
 form {
-  margin: 20px 0;
+  background-color: #33344a;
+  padding: 12px;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px #444;
+  margin-bottom: 16px;
 }
 
-label {
+form label {
+  font-weight: 500;
   display: block;
-  margin-bottom: 5px;
+  margin-top: 10px;
 }
 
-input {
-  width: 100%;
+form input {
+  width: 95%;
   padding: 8px;
-  margin-bottom: 15px;
-  box-sizing: border-box;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #1e1e2f;
+  color: white;
 }
 
-button {
-  background-color: #4CAF50;
+form input::placeholder {
+  color: #aaa;
+}
+
+form button {
+  width: 100%;
+  background-color: #6ca0ff;
   color: white;
-  padding: 10px 15px;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+form button:hover {
+  background-color: #5382e4;
+}
+
+/* Blocked list */
+#blocked-list li {
+  background-color: #33344a;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 80%;
+}
+
+#blocked-list button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
   cursor: pointer;
 }
 
-button:hover {
-  background-color: #45a049;
+/* Screen time header + toggle */
+.screen-time-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  margin-top: 24px;
 }
 
-ul {
-  list-style-type: none;
-  padding: 0;
+.screen-time-header h2 {
+  margin: 0;
+  font-size: 16px;
+  color: #f1f1f1;
 }
 
-li {
-  padding: 10px;
-  border-bottom: 1px solid #ccc;
+/* Screen time list */
+#screen-time-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+#screen-time-list li {
+  background-color: #33344a;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-top: 6px;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#screen-time-list button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
 }

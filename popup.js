@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const durationInput = document.getElementById("duration");
   const blockedList = document.getElementById("blocked-list");
 
+  // ==BLOCKING FUNCTIONALITY==
   function updateBlockedList(blockedSites) {
     blockedList.innerHTML = "";
     const now = Date.now();
@@ -89,4 +90,86 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   refreshBlockedList();
+
+// ==SCREEN TIME TRACKING==
+function formatMinutes(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}m ${secs}s`;
+}
+
+function renderScreenTime(showAll = false) {
+  chrome.storage.local.get("screenTime", (data) => {
+    const stats = data.screenTime || {};
+    const list = document.getElementById("screen-time-list");
+    list.innerHTML = "";
+
+    let flatData = stats;
+    if (
+      Object.keys(stats).length === 1 &&
+      typeof Object.values(stats)[0] === "object"
+    ) {
+      flatData = Object.values(stats)[0];
+    }
+
+    const ignoreList = ["newtab", "extensions", "devtools", "chrome"];
+    const filtered = Object.entries(flatData).filter(([domain, seconds]) => {
+      const isDateKey = /^\d{4}-\d{2}-\d{2}$/.test(domain);
+      const isInvalid = typeof seconds !== "number" || isNaN(seconds);
+      return !isDateKey && !ignoreList.includes(domain) && !isInvalid;
+    });
+
+    const sorted = filtered.sort((a, b) => b[1] - a[1]);
+
+    if (sorted.length === 0) {
+      list.innerHTML = "<li>No screen time data yet.</li>";
+      return;
+    }
+
+    const itemsToShow = showAll ? sorted : sorted.slice(0, 3);
+
+    itemsToShow.forEach(([domain, seconds]) => {
+      const li = document.createElement("li");
+    
+      // Create domain label
+      const span = document.createElement("span");
+      span.textContent = `${domain}: ${formatMinutes(seconds)}`;
+    
+      // Create Block button
+      const blockBtn = document.createElement("button");
+      blockBtn.textContent = "Block";
+      blockBtn.style.marginLeft = "10px";
+      blockBtn.style.padding = "4px 8px";
+      blockBtn.style.border = "none";
+      blockBtn.style.borderRadius = "6px";
+      blockBtn.style.backgroundColor = "#dc3545";
+      blockBtn.style.color = "white";
+      blockBtn.style.cursor = "pointer";
+      blockBtn.style.fontSize = "12px";
+    
+      // When clicked, auto-submit the block form
+      blockBtn.addEventListener("click", () => {
+        document.getElementById("website").value = domain;
+        document.getElementById("duration").value = 10; // default duration
+        document.getElementById("block-form").requestSubmit();
+      });
+    
+      li.appendChild(span);
+      li.appendChild(blockBtn);
+      list.appendChild(li);
+    });
+
+    // Add toggle button
+    if (sorted.length > 3) {
+      const toggleButton = document.createElement("li");
+      toggleButton.textContent = showAll ? "Hide" : `+${sorted.length - 3} more...`;
+      toggleButton.style.fontStyle = "italic";
+      toggleButton.style.cursor = "pointer";
+      toggleButton.style.color = "#1e4da1";
+      toggleButton.addEventListener("click", () => renderScreenTime(!showAll));
+      list.appendChild(toggleButton);
+    }
+  });
+}
+renderScreenTime();
 });
