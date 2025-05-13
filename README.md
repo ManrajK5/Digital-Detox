@@ -5,7 +5,7 @@ Now with Firebase-powered cloud syncing for persistence and future analytics.
 
 ---
 
-## ⚡ Features
+## ⚙️ Features
 
 ✅ **Real-Time Screen Time Tracking**  
 Track how long you spend on every website — displayed in a modern, minimal popup UI.
@@ -24,7 +24,7 @@ Rounded corners, dark mode, minimal controls, and smooth expandable stats. Built
 
 ---
 
-## 🚀 Screenshots
+## 📸 Screenshots
 
 > ![Screenshot 2025-05-12 at 11 13 08 PM](https://github.com/user-attachments/assets/9a221d48-c924-43da-b19d-48ac9ae30602)
 > ![Screenshot 2025-05-12 at 11 13 56 PM](https://github.com/user-attachments/assets/0612fb22-716e-4886-a1ec-271308d4ffdf)
