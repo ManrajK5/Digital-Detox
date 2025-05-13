@@ -1,3 +1,5 @@
+import { db, doc, setDoc } from './firebase.js';
+
 // ==WEBSITE BLOCKING RULE== 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "addBlock") {
@@ -99,8 +101,11 @@ setInterval(() => {
     const screenTime = data.screenTime || {};
     screenTime[currentDomain] = (screenTime[currentDomain] || 0) + 1;
     chrome.storage.local.set({ screenTime });
+
+    // Save to Firestore once per interval
+    saveScreenTimeToFirestore(screenTime);
   });
-}, 1000);
+}, 60000);
 
 // Reset screen time at midnight
 function resetAtMidnight() {
@@ -110,8 +115,31 @@ function resetAtMidnight() {
 
   setTimeout(() => {
     chrome.storage.local.set({ screenTime: {} });
-    resetAtMidnight(); // re-arm
+    resetAtMidnight();
   }, millisUntilMidnight);
 }
+
+function saveScreenTimeToFirestore(screenTime) {
+  const dateStr = new Date().toISOString().split("T")[0];
+
+  chrome.storage.local.get("userId", (res) => {
+    const userId = res.userId || "anon_guest";
+
+    const docRef = doc(db, "screenTimeLogs", `${userId}_${dateStr}`);
+
+    setDoc(docRef, {
+      userId,
+      date: dateStr,
+      screenTime
+    })
+    .then(() => {
+      console.log("✅ Saved screen time for", userId);
+    })
+    .catch((err) => {
+      console.error("❌ Firestore write error:", err);
+    });
+  });
+}
+
 
 resetAtMidnight();

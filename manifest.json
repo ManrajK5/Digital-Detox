@@ -10,9 +10,14 @@
     "declarativeNetRequest", 
     "scripting"
   ],
-  "host_permissions": ["<all_urls>"],
+  "host_permissions": [
+    "<all_urls>",
+    "https://*.firebaseio.com/",
+    "https://*.googleapis.com/"
+  ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "content_scripts": [
     {
@@ -48,5 +53,8 @@
       "resources": ["blocked.html", "blocked.css", "davidg.jpg"],
       "matches": ["<all_urls>"]
     }
-  ]  
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  }  
 }

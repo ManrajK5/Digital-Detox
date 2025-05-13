@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const durationInput = document.getElementById("duration");
   const blockedList = document.getElementById("blocked-list");
 
+
   // ==BLOCKING FUNCTIONALITY==
   function updateBlockedList(blockedSites) {
     blockedList.innerHTML = "";
